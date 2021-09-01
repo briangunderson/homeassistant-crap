@@ -1,0 +1,207 @@
+blueprint:
+  name: Inovelli Red Series LZW31-SN Dimmer - LED Notifications based on combo of two garage doors
+  description: brian testing
+  domain: automation
+  input:
+    door1:
+      name: Garage Door 1
+      default: 
+      selector:
+        entity:
+          domain: binary_sensor
+    door2:
+      name: Garage Door 2
+      default: 
+      selector:
+        entity:
+          domain: binary_sensor
+    light:
+      name: Inovelli Light
+      description: zwave_js supported Inovelli lights will show up here
+      default: 
+      selector:
+        entity:
+          integration: zwave_js
+          domain: light
+    effect:
+      description: Choose a state transition effect.
+      selector:
+        select:
+          options:
+          - 'Off'
+          - Solid
+          - Chase
+          - Fast Blink
+          - Slow Blink
+          - Blink
+          - Pulse
+          - Breath
+    duration:
+      description: How long should the effect run?
+      selector:
+        select:
+          options:
+          - 'Off'
+          - 1 Second
+          - 2 Seconds
+          - 3 Seconds
+          - 4 Seconds
+          - 5 Seconds
+          - 6 Seconds
+          - 7 Seconds
+          - 8 Seconds
+          - 9 Seconds
+          - 10 Seconds
+          - 15 Seconds
+          - 20 Seconds
+          - 25 Seconds
+          - 30 Seconds
+          - 35 Seconds
+          - 40 Seconds
+          - 45 Seconds
+          - 50 Seconds
+          - 55 Seconds
+          - 60 Seconds
+          - 2 Minutes
+          - 3 Minutes
+          - 4 Minutes
+    both_doors_closed_color:
+      name: Both Doors Closed Color
+      default: Green
+      selector:
+        select:
+          options:
+          - 'Off'
+          - Red
+          - Orange
+          - Yellow
+          - Green
+          - Cyan
+          - Teal
+          - Blue
+          - Purple
+          - Light Pink
+          - Pink
+    one_door_closed_color:
+      name: One Door Open and One Door Closed
+      description: Pick a color for one garage door open and one closed
+      default: Yellow
+      selector:
+        select:
+          options:
+          - 'Off'
+          - Red
+          - Orange
+          - Yellow
+          - Green
+          - Cyan
+          - Teal
+          - Blue
+          - Purple
+          - Light Pink
+          - Pink
+    zero_doors_closed_color:
+      name: Two Doors Open
+      default: Red
+      selector:
+        select:
+          options:
+          - 'Off'
+          - Red
+          - Orange
+          - Yellow
+          - Green
+          - Cyan
+          - Teal
+          - Blue
+          - Purple
+          - Light Pink
+          - Pink
+mode: restart
+trigger:
+- platform: state
+  entity_id: !input 'door1'
+  to: open
+- platform: state
+  entity_id: !input 'door1'
+  to: closed
+- platform: state
+  entity_id: !input 'door2'
+  to: open
+- platform: state
+  entity_id: !input 'door2'
+  to: closed
+action:
+- choose:
+  - conditions:
+    - condition: state
+      entity_id: !input 'door1'
+      state: closed
+    - condition: state
+      entity_id: !input 'door2'
+      state: closed
+    sequence:
+    - service: script.inovelli_led_set_defaults
+      data:
+        entity_id: !input 'light'
+        color: !input 'both_doors_closed_color'
+    - service: script.inovelli_led
+      data:
+        entity_id: !input 'light'
+        color: !input 'both_doors_closed_color'
+        effect: !input 'effect'
+        duration: !input 'duration'
+  - conditions:
+    - condition: state
+      entity_id: !input 'door1'
+      state: open
+    - condition: state
+      entity_id: !input 'door2'
+      state: closed
+    sequence:
+    - service: script.inovelli_led_set_defaults
+      data:
+        entity_id: !input 'light'
+        color: !input 'one_door_closed_color'
+    - service: script.inovelli_led
+      data:
+        entity_id: !input 'light'
+        color: !input 'one_door_closed_color'
+        effect: !input 'effect'
+        duration: !input 'duration'
+  - conditions:
+    - condition: state
+      entity_id: !input 'door1'
+      state: closed
+    - condition: state
+      entity_id: !input 'door2'
+      state: open
+    sequence:
+    - service: script.inovelli_led_set_defaults
+      data:
+        entity_id: !input 'light'
+        color: !input 'one_door_closed_color'
+    - service: script.inovelli_led
+      data:
+        entity_id: !input 'light'
+        color: !input 'one_door_closed_color'
+        effect: !input 'effect'
+        duration: !input 'duration'
+  - conditions:
+    - condition: state
+      entity_id: !input 'door1'
+      state: open
+    - condition: state
+      entity_id: !input 'door2'
+      state: open
+    sequence:
+    - service: script.inovelli_led_set_defaults
+      data:
+        entity_id: !input 'light'
+        color: !input 'zero_doors_closed_color'
+    - service: script.inovelli_led
+      data:
+        entity_id: !input 'light'
+        color: !input 'zero_doors_closed_color'
+        effect: !input 'effect'
+        duration: !input 'duration'
